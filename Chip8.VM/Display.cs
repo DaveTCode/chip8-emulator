@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Chip8.VM.Displays
+namespace Chip8.VM
 {
     public class Display
     {

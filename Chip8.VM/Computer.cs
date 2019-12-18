@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Chip8.VM.Displays;
-using Chip8.VM.Keyboards;
 
 namespace Chip8.VM
 {
@@ -37,9 +35,6 @@ namespace Chip8.VM
         // Display is injected to provide different UIs
         private readonly Display _display = new Display();
 
-        // Keyboard is injected to provide different input methods
-        private readonly IKeyboard _keyboard;
-
         // Used to generate random numbers
         private readonly Random _random;
         
@@ -51,9 +46,10 @@ namespace Chip8.VM
         // running and whether we should decrement the timer/sound registers
         private long _totalTicks;
 
-        public Computer(IKeyboard keyboard, Random random, int ticksPerSecond)
+        private Keyboard _keyboard = new Keyboard();
+
+        public Computer(Random random, int ticksPerSecond)
         {
-            _keyboard = keyboard;
             _random = random;
             _ticksPerTimerDecrement = ticksPerSecond / 60;
         }
@@ -80,6 +76,7 @@ namespace Chip8.VM
             
             Array.Clear(_registers, 0, _registers.Length);
             Array.Clear(_memory, 0, _memory.Length);
+            _keyboard.ClearKeyboard();
             _i = 0;
             _programCounter = programType.MemoryStartAddress();
             _delayTimerRegister = 0;
@@ -88,7 +85,7 @@ namespace Chip8.VM
             Array.Clear(_stack, 0, _stack.Length);
             _display.ClearDisplay();
             _totalTicks = 0L;
-            
+
             LoadFont();
             Array.Copy(program, 0, _memory, programType.MemoryStartAddress(), program.Length);
         }
@@ -101,6 +98,16 @@ namespace Chip8.VM
         public bool[,] GetCurrentFrame()
         {
             return _display.GetCurrentFrame();
+        }
+
+        public void KeyDown(byte key)
+        {
+            _keyboard.KeyDown(key);
+        }
+
+        public void KeyUp(byte key)
+        {
+            _keyboard.KeyUp(key);
         }
 
         /// <summary>
@@ -250,14 +257,14 @@ namespace Chip8.VM
                     
                     break;
                 case (0xE, _, 0x9, 0xE): // Instruction 0xEx9E - SKP Vx
-                    if (_keyboard.IsPressed(_registers[n2]))
+                    if (_keyboard.IsKeyPressed(_registers[n2]))
                     {
                         _programCounter += 2;
                     }
 
                     break;
                 case (0xE, _, 0xA, 0x1): // Instruction 0xExA1 - SKP Vx
-                    if (!_keyboard.IsPressed(_registers[n2]))
+                    if (!_keyboard.IsKeyPressed(_registers[n2]))
                     {
                         _programCounter += 2;
                     }
@@ -267,7 +274,17 @@ namespace Chip8.VM
                     _registers[n2] = _delayTimerRegister;
                     break;
                 case (0xF, _, 0x0, 0xA): // Instruction 0xFx0A - LD Vx, K
-                    // TODO - Halt execution until key press
+                    var key = _keyboard.FirstKeyPressed();
+                    if (key.HasValue)
+                    {
+                        _registers[n2] = key.Value;
+                    }
+                    else
+                    {
+                        // Go back so we execute this instruction again on the next cycle
+                        _programCounter -= 2;
+                    }
+
                     break;
                 case (0xF, _, 0x1, 0x5): // Instruction 0xFx15 - LD DT, Vx
                     _delayTimerRegister = _registers[n2];
