@@ -33,7 +33,7 @@ namespace Chip8.VM
         private readonly ushort[] _stack = new ushort[StackSize];
 
         // Display is injected to provide different UIs
-        private readonly Display _display = new Display();
+        public readonly Display Display = new Display();
 
         // Used to generate random numbers
         private readonly Random _random;
@@ -83,23 +83,13 @@ namespace Chip8.VM
             _soundTimerRegister = 0;
             _stackPointer = 0;
             Array.Clear(_stack, 0, _stack.Length);
-            _display.ClearDisplay();
+            Display.ClearDisplay();
             _totalTicks = 0L;
 
             LoadFont();
             Array.Copy(program, 0, _memory, programType.MemoryStartAddress(), program.Length);
         }
         
-        /// <summary>
-        /// Get the full state of the current frame for the renderer to process.
-        /// </summary>
-        /// <returns>A span containing the frame with true for pixel ON and
-        /// false for pixel OFF.</returns>
-        public bool[,] GetCurrentFrame()
-        {
-            return _display.GetCurrentFrame();
-        }
-
         public void KeyDown(byte key)
         {
             _keyboard.KeyDown(key);
@@ -151,7 +141,7 @@ namespace Chip8.VM
             switch (n1, n2, n3, n4)
             {
                 case (0x0, 0x0, 0xE, 0x0): // Instruction 0x00E0 - CLS
-                    _display.ClearDisplay();
+                    Display.ClearDisplay();
                     break;
                 case (0x0, 0x0, 0xE, 0xE): // Instruction 0xEE - RET
                     // TODO - Don't underflow stack
@@ -253,7 +243,7 @@ namespace Chip8.VM
                     break;
                 case (0xD, _, _, _): // Instruction 0xDxyn - DRW Vx,Vy,n
                     var spriteData = _memory.AsSpan().Slice(_i, n4); // TODO - Ensure no array out of bounds
-                    _registers[0xF] = (byte) (_display.DrawSprite(_registers[n2], _registers[n3], spriteData) ? 1 : 0);
+                    _registers[0xF] = (byte) (Display.DrawSprite(_registers[n2], _registers[n3], spriteData) ? 1 : 0);
                     
                     break;
                 case (0xE, _, 0x9, 0xE): // Instruction 0xEx9E - SKP Vx

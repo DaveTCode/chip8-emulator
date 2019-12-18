@@ -87,30 +87,33 @@ namespace Chip8.Console
 
                 _computer.Tick();
 
-                var frameBuffer = _computer.GetCurrentFrame();
-
-                for (var x = 0; x < frameBuffer.GetLength(0); x++)
+                if (_computer.Display.NeedsRedraw)
                 {
-                    for (var y = 0; y < frameBuffer.GetLength(1); y++)
-                    {
-                        SDL.SDL_SetRenderDrawColor(_renderer, 
-                            (byte) (frameBuffer[x, y] ? 255 : 0),
-                            (byte) (frameBuffer[x, y] ? 255 : 0), 
-                            (byte) (frameBuffer[x, y] ? 255 : 0), 
-                            255);
-                        
-                        var rect = new SDL.SDL_Rect
-                        {
-                            x = x * _pixelSize,
-                            y = y * _pixelSize,
-                            h = _pixelSize,
-                            w = _pixelSize,
-                        };
-                        SDL.SDL_RenderFillRect(_renderer, ref rect);
-                    }
-                }
+                    var frameBuffer = _computer.Display.GetCurrentFrame();
 
-                SDL.SDL_RenderPresent(_renderer);
+                    for (var x = 0; x < frameBuffer.GetLength(0); x++)
+                    {
+                        for (var y = 0; y < frameBuffer.GetLength(1); y++)
+                        {
+                            SDL.SDL_SetRenderDrawColor(_renderer,
+                                (byte)(frameBuffer[x, y] ? 255 : 0),
+                                (byte)(frameBuffer[x, y] ? 255 : 0),
+                                (byte)(frameBuffer[x, y] ? 255 : 0),
+                                255);
+
+                            var rect = new SDL.SDL_Rect
+                            {
+                                x = x * _pixelSize,
+                                y = y * _pixelSize,
+                                h = _pixelSize,
+                                w = _pixelSize,
+                            };
+                            SDL.SDL_RenderFillRect(_renderer, ref rect);
+                        }
+                    }
+
+                    SDL.SDL_RenderPresent(_renderer);
+                }
 
                 var msToSleep = msPerCycle - (stopwatch.ElapsedTicks / Stopwatch.Frequency) * 1000;
                 if (msToSleep > 0)

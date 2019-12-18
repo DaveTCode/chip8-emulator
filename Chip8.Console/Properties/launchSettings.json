@@ -27,6 +27,10 @@
     "Game: BLITZ": {
       "commandName": "Project",
       "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\BLITZ"
+    },
+    "Game: PONG": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\PONG"
     }
   }
 }
