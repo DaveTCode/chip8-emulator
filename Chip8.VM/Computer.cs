@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Chip8.VM.Displays;
-using Chip8.VM.Keyboards;
 
 namespace Chip8.VM
 {
@@ -35,10 +33,7 @@ namespace Chip8.VM
         private readonly ushort[] _stack = new ushort[StackSize];
 
         // Display is injected to provide different UIs
-        private readonly Display _display = new Display();
-
-        // Keyboard is injected to provide different input methods
-        private readonly IKeyboard _keyboard;
+        public readonly Display Display = new Display();
 
         // Used to generate random numbers
         private readonly Random _random;
@@ -51,9 +46,10 @@ namespace Chip8.VM
         // running and whether we should decrement the timer/sound registers
         private long _totalTicks;
 
-        public Computer(IKeyboard keyboard, Random random, int ticksPerSecond)
+        private Keyboard _keyboard = new Keyboard();
+
+        public Computer(Random random, int ticksPerSecond)
         {
-            _keyboard = keyboard;
             _random = random;
             _ticksPerTimerDecrement = ticksPerSecond / 60;
         }
@@ -80,27 +76,28 @@ namespace Chip8.VM
             
             Array.Clear(_registers, 0, _registers.Length);
             Array.Clear(_memory, 0, _memory.Length);
+            _keyboard.ClearKeyboard();
             _i = 0;
             _programCounter = programType.MemoryStartAddress();
             _delayTimerRegister = 0;
             _soundTimerRegister = 0;
             _stackPointer = 0;
             Array.Clear(_stack, 0, _stack.Length);
-            _display.ClearDisplay();
+            Display.ClearDisplay();
             _totalTicks = 0L;
-            
+
             LoadFont();
             Array.Copy(program, 0, _memory, programType.MemoryStartAddress(), program.Length);
         }
         
-        /// <summary>
-        /// Get the full state of the current frame for the renderer to process.
-        /// </summary>
-        /// <returns>A span containing the frame with true for pixel ON and
-        /// false for pixel OFF.</returns>
-        public bool[,] GetCurrentFrame()
+        public void KeyDown(byte key)
         {
-            return _display.GetCurrentFrame();
+            _keyboard.KeyDown(key);
+        }
+
+        public void KeyUp(byte key)
+        {
+            _keyboard.KeyUp(key);
         }
 
         /// <summary>
@@ -144,7 +141,7 @@ namespace Chip8.VM
             switch (n1, n2, n3, n4)
             {
                 case (0x0, 0x0, 0xE, 0x0): // Instruction 0x00E0 - CLS
-                    _display.ClearDisplay();
+                    Display.ClearDisplay();
                     break;
                 case (0x0, 0x0, 0xE, 0xE): // Instruction 0xEE - RET
                     // TODO - Don't underflow stack
@@ -246,18 +243,18 @@ namespace Chip8.VM
                     break;
                 case (0xD, _, _, _): // Instruction 0xDxyn - DRW Vx,Vy,n
                     var spriteData = _memory.AsSpan().Slice(_i, n4); // TODO - Ensure no array out of bounds
-                    _registers[0xF] = (byte) (_display.DrawSprite(_registers[n2], _registers[n3], spriteData) ? 1 : 0);
+                    _registers[0xF] = (byte) (Display.DrawSprite(_registers[n2], _registers[n3], spriteData) ? 1 : 0);
                     
                     break;
                 case (0xE, _, 0x9, 0xE): // Instruction 0xEx9E - SKP Vx
-                    if (_keyboard.IsPressed(_registers[n2]))
+                    if (_keyboard.IsKeyPressed(_registers[n2]))
                     {
                         _programCounter += 2;
                     }
 
                     break;
                 case (0xE, _, 0xA, 0x1): // Instruction 0xExA1 - SKP Vx
-                    if (!_keyboard.IsPressed(_registers[n2]))
+                    if (!_keyboard.IsKeyPressed(_registers[n2]))
                     {
                         _programCounter += 2;
                     }
@@ -267,7 +264,17 @@ namespace Chip8.VM
                     _registers[n2] = _delayTimerRegister;
                     break;
                 case (0xF, _, 0x0, 0xA): // Instruction 0xFx0A - LD Vx, K
-                    // TODO - Halt execution until key press
+                    var key = _keyboard.FirstKeyPressed();
+                    if (key.HasValue)
+                    {
+                        _registers[n2] = key.Value;
+                    }
+                    else
+                    {
+                        // Go back so we execute this instruction again on the next cycle
+                        _programCounter -= 2;
+                    }
+
                     break;
                 case (0xF, _, 0x1, 0x5): // Instruction 0xFx15 - LD DT, Vx
                     _delayTimerRegister = _registers[n2];

@@ -5,13 +5,13 @@
    "version": "0.2.0",
    "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "BC Test",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/Chip8.Console/bin/Debug/netcoreapp3.1/Chip8.Console.dll",
-            "args": [],
+            "args": ["-f", "${workspaceFolder}/Programs/BC_test.ch8"],
             "cwd": "${workspaceFolder}/Chip8.Console",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

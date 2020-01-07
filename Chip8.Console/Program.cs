@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Chip8.VM;
-using Chip8.VM.Keyboards;
 using CommandLine;
 
 namespace Chip8.Console
@@ -66,7 +65,7 @@ namespace Chip8.Console
             var random = options.RandomSeed.HasValue ? new Random(options.RandomSeed.Value) : new Random();
             
             var program = await File.ReadAllBytesAsync(options.ProgramPath);
-            var vm = new Computer(new NullKeyboard(), random, options.TicksPerSecond);
+            var vm = new Computer(random, options.TicksPerSecond);
             vm.LoadProgramAndReset(program, options.ProgramType);
             
             using (var application = new Sdl2Application(vm, options.PixelSize))

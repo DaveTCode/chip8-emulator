@@ -1,0 +1,36 @@
+{
+  "profiles": {
+    "IBM Logo": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\IBMLogo.ch8"
+    },
+    "Particle Demo": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\ParticleDemo.ch8"
+    },
+    "Opcode Test 1": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\test_opcode.ch8"
+    },
+    "Opcode Test 2": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\BC_test.ch8"
+    },
+    "Game: 15 Puzzle": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\15PUZZLE"
+    },
+    "Game: BLINKY": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\BLINKY"
+    },
+    "Game: BLITZ": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\BLITZ"
+    },
+    "Game: PONG": {
+      "commandName": "Project",
+      "commandLineArgs": "-f ..\\..\\..\\..\\Programs\\PONG"
+    }
+  }
+}
